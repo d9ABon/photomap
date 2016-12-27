@@ -118,6 +118,22 @@ var map = null;
 
 var api_key = 'c9f54b3e05dfaaca105f42bd1a1afd01';
 
+var infowindow = new google.maps.InfoWindow({
+    content: ''
+});
+function bindInfoWindow(marker, map, infowindow, photosData) {
+	google.maps.event.addListener(marker, 'click', function() {
+	    var html, photo;
+	    if (photosData.length == 1) {
+	        photo = photosData[0];
+	        html = "<p>"+photo.description+"</p>"+"<p><img src='"+photo.src+"'/></p>";
+        }
+		infowindow.setContent(html);
+		infowindow.open(map, marker);
+	});
+}
+
+
 function refreshMap() {
     $.ajax({
         'url': "https://api.flickr.com/services/rest/",
@@ -127,7 +143,7 @@ function refreshMap() {
             'bbox': decodeURIComponent('33.758754%2C44.598901%2C33.964576%2C44.695992'),
             'accuracy': 1,
             'sort': 'interestingness-desc',
-            'extras': 'geo,url_t,url_m',
+            'extras': 'geo,url_t,url_m,description',
             'per_page': 250,
             'api_key': api_key,
             'method': 'flickr.photos.search'
@@ -138,25 +154,32 @@ function refreshMap() {
     });
 }
 function onDataRecieved(data) {
+    console.log(data);
+
     if (markerClusterer) {
         markerClusterer.clearMarkers();
     }
 
     var markers = [];
 
-    var i, photo, markerImage;
+    var i, photo, markerImage, description;
 
     for (i = 0; i < data.photos.photo.length; i++) {
         photo = data.photos.photo[i];
 
         var latLng = new google.maps.LatLng(photo.latitude, photo.longitude);
-        markerImage = new google.maps.MarkerImage(photo.url_t, new google.maps.Size(32, 32));
+        markerImage = new google.maps.MarkerImage(photo.url_t, null, null, null, new google.maps.Size(32, 32));
+        description = photo.description._content;
         var marker = new google.maps.Marker({
             position: latLng,
             draggable: false,
-            icon: markerImage
+            icon: markerImage,
+            title: description
         });
         markers.push(marker);
+
+        // add an event listener for this marker
+		bindInfoWindow(marker, map, infowindow, [{'description':description, 'src': photo.url_m}]);
     }
 
     var zoom = parseInt(document.getElementById('zoom').value, 10);
@@ -171,7 +194,7 @@ function onDataRecieved(data) {
         maxZoom: zoom,
         gridSize: size,
         styles: styles[style],
-        imagePath: '../images/m',
+        imagePath: './images/m',
         zoomOnClick: false
     });
 }
