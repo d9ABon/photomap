@@ -44,11 +44,18 @@ ClusterIcon.prototype.onAdd = function() {
 
 $(document).on('click', 'ul.clusterImages img', function(e){
     e.preventDefault();
+    var previewImg = $(this);
     $('ul.clusterImages img').removeClass('current');
-    $('#infoWindowImg').attr('src', $(this).data('url_m'));
-    $('#infoWindowTitle').html(decodeURIComponent($(this).data('title')));
-    $(this).addClass('current');
+    $('#infoWindowImg').attr('src', previewImg.data('url_m'));
+    $('#infoWindowTitle').html(decodeURIComponent(previewImg.data('desc')));
+    previewImg.addClass('current');
 });
+
+$(document).on('click', '#site_opts', function(e){
+    e.preventDefault();
+    $('#inline-actions').toggle();
+});
+
 
 
 function bindInfoWindow(map, marker) {
@@ -64,17 +71,16 @@ function bindInfoWindow(map, marker) {
     } else if (marker instanceof MarkerClusterer) {
         google.maps.event.addListener(markerClusterer, 'clusterclick', function(cluster) {
             var markers = cluster.markers_;
-            var html, i;
+            var html = '', i;
             var rand_marker = _.sample(markers);
-            html += '<p class="infoWindowTitle">'+rand_marker.title+'</p>';
+            html += '<p id="infoWindowTitle">'+rand_marker.title+'</p>';
             html += '<p id="infoWindowImgContainer"><img id="infoWindowImg" src="'+rand_marker.url_m+'" /></p>';
             html += '<p><ul class="clusterImages">';
 
             for (i = 0; i < markers.length; i++) {
-                html += '<li><img src="'+markers[i].url_t+'" data-url_m="'+markers[i].url_m+'" data-title="'+encodeURIComponent(markers[i].title)+'" /></li>';
+                html += '<li><img src="'+markers[i].url_t+'" data-url_m="'+markers[i].url_m+'" data-desc="'+encodeURIComponent(markers[i].title)+'" /></li>';
             }
             html += '</ul></p>';
-            // console.log(cluster, markers, html);
 
             infowindow.setContent(html);
             infowindow.setPosition(new google.maps.LatLng(cluster.center_.lat(), cluster.center_.lng()));
@@ -116,10 +122,6 @@ function refreshMap() {
 }
 function onDataRecieved(data) {
     console.log(data);
-
-    if (markerClusterer) {
-        //markerClusterer.clearMarkers();
-    }
 
     var markers = [];
 
@@ -190,7 +192,12 @@ function initialize() {
 
     map = new google.maps.Map($('#map')[0], options);
 
-    google.maps.event.addDomListener($('#refresh')[0], 'click', refreshMap);
+    google.maps.event.addDomListener($('#refresh')[0], 'click', function(){
+        if (markerClusterer) {
+            markerClusterer.clearMarkers();
+        }
+        refreshMap();
+    });
 
     google.maps.event.addDomListener($('#clear')[0], 'click', clearClusters);
 

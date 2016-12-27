@@ -2,18 +2,18 @@
 <html>
 <head>
     <style >
-        html, body { height: 100%; margin: 0; padding: 0; }
-        #map { height: 90vh; }
-        #actions {
-            list-style: none;
+        html, body {
+            height: 100%;
+            margin: 0;
             padding: 0;
         }
-        #inline-actions {
-            padding-top: 10px;
+        #map-container {
+            position: relative;
         }
-        .item {
-            margin-left: 20px;
+        #map {
+            height: 100vh;
         }
+
 
         #infoWindowImgContainer {
             text-align: center;
@@ -40,6 +40,38 @@
             border: 1px solid darkgreen;
         }
 
+        #site_opts {
+            position: fixed;
+            z-index: 999;
+            right: 10px;
+            top: 10px;
+        }
+        #site_opts img {
+            width: 20px;
+            height: 20px;
+        }
+
+        #inline-actions {
+            display: none;
+            z-index: 999;
+
+            width: 300px;
+            height: 300px;
+            background-color: white;
+            position: absolute;
+            top:0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+
+            margin: auto;
+        }
+        #inline-actions-inner {
+            margin: auto;
+            text-align: center;
+            vertical-align: middle;
+        }
+
     </style>
 </head>
 <body>
@@ -58,42 +90,50 @@
 
 
 <div id="inline-actions">
-      <span>Max zoom level:
-        <select id="zoom">
-          <option value="-1">Default</option>
-          <option value="7">7</option>
-          <option value="8">8</option>
-          <option value="9">9</option>
-          <option value="10">10</option>
-          <option value="11">11</option>
-          <option value="12">12</option>
-          <option value="13">13</option>
-          <option value="14" selected="selected">14</option>
-        </select>
+    <div id="inline-actions-inner">
+        <div>Max zoom level:
+            <select id="zoom">
+                <option value="-1">Default</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+                <option value="10">10</option>
+                <option value="11">11</option>
+                <option value="12">12</option>
+                <option value="13">13</option>
+                <option value="14" selected="selected">14</option>
+            </select>
 
-      </span>
-    <span class="item">Cluster size:
-        <select id="size">
-          <option value="-1">Default</option>
-          <option value="40" selected="selected">40</option>
-          <option value="50">50</option>
-          <option value="70">70</option>
-          <option value="80">80</option>
-        </select>
-      </span>
-    <span class="item" style="display: none">Cluster style:
-        <select id="style">
-          <option value="-1">Default</option>
-          <option value="0">People</option>
-          <option value="1">Conversation</option>
-          <option value="2">Heart</option>
-          <option value="3">Pin</option>
-       </select>
-    </span>
-    <input id="refresh" type="button" value="Refresh Map" class="item"/>
-    <a href="#" id="clear">Clear</a>
+        </div>
+
+        <div>Cluster size:
+            <select id="size">
+                <option value="-1">Default</option>
+                <option value="40" selected="selected">40</option>
+                <option value="50">50</option>
+                <option value="70">70</option>
+                <option value="80">80</option>
+            </select>
+        </div>
+
+        <div style="display: none">Cluster style:
+            <select id="style">
+                <option value="-1">Default</option>
+                <option value="0">People</option>
+                <option value="1">Conversation</option>
+                <option value="2">Heart</option>
+                <option value="3">Pin</option>
+            </select>
+        </div>
+
+        <input id="refresh" type="button" value="Refresh Map" class="item"/>
+        <a href="#" id="clear">Clear</a>
+    </div>
 </div>
 
+<a href="#" id="site_opts">
+    <img src="./settings.png" />
+</a>
 
 </body>
 </html>
