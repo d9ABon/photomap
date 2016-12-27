@@ -24,36 +24,73 @@ if (viewportOptions) {
 }
 
 
+ClusterIcon.prototype.onAdd = function() {
+    this.div_ = document.createElement('DIV');
+    if (this.visible_) {
+        var pos = this.getPosFromLatLng_(this.center_);
+        this.div_.style.cssText = this.createCss(pos);
+        this.div_.innerHTML = this.sums_.text;
+    }
 
-viewportOptions = {
-    lng0: 33.758754,
-    lng1: 33.964576,
-    lat0: 44.598901,
-    lat1: 44.695992,
-    zoom: 12
-};
+    var panes = this.getPanes();
+    panes.overlayMouseTarget.appendChild(this.div_);
 
-
-viewportOptions = {
-    lng0: 33.758754,
-    lng1: 33.964576,
-    lat0: 44.598901,
-    lat1: 44.695992,
-    zoom: 12
-};
-
-
-
-function bindInfoWindow(marker, map, infowindow, photosData) {
-    google.maps.event.addListener(marker, 'click', function() {
-        var html, photo;
-        if (photosData.length == 1) {
-            photo = photosData[0];
-            html = "<p>"+photo.description+"</p>"+"<p><img src='"+photo.src+"'/></p>";
-        }
-        infowindow.setContent(html);
-        infowindow.open(map, marker);
+    var that = this;
+    google.maps.event.addDomListener(this.div_, 'click', function(e) {
+        e.stopImmediatePropagation();
+        that.triggerClusterClick();
     });
+};
+
+$(document).on('click', 'ul.clusterImages img', function(e){
+    e.preventDefault();
+    $('ul.clusterImages img').removeClass('current');
+    $('#infoWindowImg').attr('src', $(this).data('url_m'));
+    $('#infoWindowTitle').html(decodeURIComponent($(this).data('title')));
+    $(this).addClass('current');
+});
+
+
+function bindInfoWindow(map, marker) {
+    if (marker instanceof google.maps.Marker) {
+        google.maps.event.addListener(marker, 'click', (function(marker) {
+            return function() {
+                var html;
+                html = "<p class='infoWindowTitle'>" + marker.title + "</p>" + "<p id='infoWindowImgContainer'><img id='infoWindowImg' src='" + marker.url_m + "'/></p>";
+                infowindow.setContent(html);
+                infowindow.open(map, marker);
+            }
+        })(marker));
+    } else if (marker instanceof MarkerClusterer) {
+        google.maps.event.addListener(markerClusterer, 'clusterclick', function(cluster) {
+            var markers = cluster.markers_;
+            var html, i;
+            var rand_marker = _.sample(markers);
+            html += '<p class="infoWindowTitle">'+rand_marker.title+'</p>';
+            html += '<p id="infoWindowImgContainer"><img id="infoWindowImg" src="'+rand_marker.url_m+'" /></p>';
+            html += '<p><ul class="clusterImages">';
+
+            for (i = 0; i < markers.length; i++) {
+                html += '<li><img src="'+markers[i].url_t+'" data-url_m="'+markers[i].url_m+'" data-title="'+encodeURIComponent(markers[i].title)+'" /></li>';
+            }
+            html += '</ul></p>';
+            // console.log(cluster, markers, html);
+
+            infowindow.setContent(html);
+            infowindow.setPosition(new google.maps.LatLng(cluster.center_.lat(), cluster.center_.lng()));
+            infowindow.open(map);
+
+            setTimeout(function(){
+                $('ul.clusterImages img').each(function(){
+                    if ($(this).data('url_m') == $('#infoWindowImg').attr('src')) {
+                        $(this).addClass('current');
+                    }
+                });
+            }, 500);
+        });
+    }
+
+
 }
 
 
@@ -68,7 +105,7 @@ function refreshMap() {
             'accuracy': 11, //1
             'sort': 'interestingness-desc',
             'extras': 'geo,url_t,url_m,description',
-            'per_page': 250,
+            'per_page': 50,
             'api_key': api_key,
             'method': 'flickr.photos.search'
         },
@@ -81,7 +118,7 @@ function onDataRecieved(data) {
     console.log(data);
 
     if (markerClusterer) {
-        markerClusterer.clearMarkers();
+        //markerClusterer.clearMarkers();
     }
 
     var markers = [];
@@ -96,14 +133,16 @@ function onDataRecieved(data) {
         description = photo.description._content;
         var marker = new google.maps.Marker({
             position: latLng,
-            draggable: false,
             icon: markerImage,
-            title: description
+            title: description,
+            url_m: photo.url_m, //custom attr
+            url_t: photo.url_t, //custom attr
+            draggable: false
         });
         markers.push(marker);
 
         // add an event listener for this marker
-        bindInfoWindow(marker, map, infowindow, [{'description':description, 'src': photo.url_m}]);
+        bindInfoWindow(map, marker);
     }
 
     var zoom = parseInt(document.getElementById('zoom').value, 10);
@@ -121,6 +160,8 @@ function onDataRecieved(data) {
         imagePath: './images/m',
         zoomOnClick: false
     });
+
+    bindInfoWindow(map, markerClusterer);
 }
 
 var viewportUserChanged = _.throttle(function(){
