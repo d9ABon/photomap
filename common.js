@@ -8,6 +8,9 @@ String.prototype.hashCode = function() {
     }
     return hash;
 };
+
+/*
+
 //cache requests
 $.ajaxPrefilter(function (options, originalOptions, jqXHR) {
     if (options.cache) {
@@ -50,3 +53,4 @@ $.ajaxPrefilter(function (options, originalOptions, jqXHR) {
     }
 });
 
+*/

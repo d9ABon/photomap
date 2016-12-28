@@ -23,6 +23,31 @@ if (viewportOptions) {
     };
 }
 
+var site_options = localStorage.getItem('site_options');
+function saveSiteOptions() {
+    site_options = {
+        'photos_per_request': parseInt($('[name="photos_per_request"]').val()),
+        'max_zoom': parseInt($('[name="max_zoom"]').val(), 10),
+        'cluster_size': parseInt($('[name="cluster_size"]').val(), 10),
+        'cluster_style': parseInt($('[name="cluster_style"]').val(), 10)
+    };
+    localStorage.setItem('site_options', JSON.stringify(site_options));
+}
+if (!site_options) {
+    saveSiteOptions();
+} else {
+    site_options = JSON.parse(site_options);
+    _.mapObject(site_options, function(val, key){
+        $('[name="'+key+'"]').val(val);
+    });
+}
+$(function(){
+    $('#inline-actions input, #inline-actions select').change(function(){
+        saveSiteOptions();
+    });
+});
+
+
 
 ClusterIcon.prototype.onAdd = function() {
     this.div_ = document.createElement('DIV');
@@ -106,12 +131,11 @@ function refreshMap() {
         'data': {
             'format': 'json',
             'nojsoncallback': 1,
-            //'bbox': "33.758754,44.598901,33.964576,44.695992",
             'bbox': viewportOptions.lng1+','+viewportOptions.lat1+','+viewportOptions.lng0+','+viewportOptions.lat0,
             'accuracy': 11, //1
             'sort': 'interestingness-desc',
             'extras': 'geo,url_t,url_m,description',
-            'per_page': 50,
+            'per_page': site_options['photos_per_request'],
             'api_key': api_key,
             'method': 'flickr.photos.search'
         },
@@ -147,9 +171,9 @@ function onDataRecieved(data) {
         bindInfoWindow(map, marker);
     }
 
-    var zoom = parseInt(document.getElementById('zoom').value, 10);
-    var size = parseInt(document.getElementById('size').value, 10);
-    var style = parseInt(document.getElementById('style').value, 10);
+    var zoom = site_options['max_zoom'];
+    var size = site_options['cluster_size'];
+    var style = site_options['cluster_style'];
     zoom = zoom === -1 ? null : zoom;
     size = size === -1 ? null : size;
     style = style === -1 ? null: style;
