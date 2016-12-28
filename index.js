@@ -71,9 +71,21 @@ $(document).on('click', 'ul.clusterImages img', function(e){
     e.preventDefault();
     var previewImg = $(this);
     $('ul.clusterImages img').removeClass('current');
-    $('#infoWindowImg').attr('src', previewImg.data('url_m'));
+
+    var img = new Image();
+    img.src = previewImg.data('url_m');
+    img.onload = function(){
+        $('#infoWindowImg').attr('src', previewImg.data('url_m'));
+    };
+
     $('#infoWindowTitle').html(decodeURIComponent(previewImg.data('desc')));
     previewImg.addClass('current');
+});
+$(document).on('mouseover', 'ul.clusterImages img', function(e){
+    //just preload
+    var previewImg = $(this);
+    var img = new Image();
+    img.src = previewImg.data('url_m');
 });
 
 $(document).on('click', '#site_opts', function(e){
