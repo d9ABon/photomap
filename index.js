@@ -100,7 +100,6 @@ function mousewheel_delta(event) {
 }
 function mousewheel_event(event) {
     var deltas = mousewheel_delta(event);
-    console.log('mousewheel', this, event, deltas);
     $('ul.clusterImages')[0].scrollLeft -= (deltas[0] * GALLERY_SCROLL_PIXELS);
     event.preventDefault();
 }
