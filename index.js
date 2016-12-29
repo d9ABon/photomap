@@ -12,6 +12,7 @@ var infowindow = new google.maps.InfoWindow({
 
 var markersSet = [];
 var MAX_LEN_markersSet = 5000;
+var GALLERY_SCROLL_PIXELS = 120;
 
 var viewportOptions = localStorage.getItem('viewportOptions');
 if (viewportOptions) {
@@ -65,14 +66,60 @@ $(document).on('click', 'ul.clusterImages img', function(e){
     previewImg.addClass('current');
 });
 
+function mousewheel_delta(event) {
+    var orgEvent = event || window.event, delta = 0, returnValue = true, deltaX = 0, deltaY = 0;
+    event = $.event.fix(orgEvent);
+    event.type = "mousewheel";
+
+    // Old school scrollwheel delta
+    if (orgEvent.wheelDelta) {
+        delta = orgEvent.wheelDelta / 120;
+    }
+    if (orgEvent.detail) {
+        delta = -orgEvent.detail / 3;
+    }
+
+    // New school multidimensional scroll (touchpads) deltas
+    deltaY = delta;
+
+    // Gecko
+    if (orgEvent.axis !== undefined && orgEvent.axis === orgEvent.HORIZONTAL_AXIS) {
+        deltaY = 0;
+        deltaX = -1 * delta;
+    }
+
+    // Webkit
+    if (orgEvent.wheelDeltaY !== undefined) {
+        deltaY = orgEvent.wheelDeltaY / 120;
+    }
+    if (orgEvent.wheelDeltaX !== undefined) {
+        deltaX = -1 * orgEvent.wheelDeltaX / 120;
+    }
+
+    // Add event and delta to the front of the arguments
+    return [delta, deltaX, deltaY];
+}
+function mousewheel_event(event) {
+    var deltas = mousewheel_delta(event);
+    console.log('mousewheel', this, event, deltas);
+    $('ul.clusterImages')[0].scrollLeft -= (deltas[0] * GALLERY_SCROLL_PIXELS);
+    event.preventDefault();
+}
+
 $(document).on('mouseenter', '#infoWindow', function(e){
     map.setOptions({ scrollwheel: false });
+
+    $('#map')[0].addEventListener('mousewheel', mousewheel_event, true );
+    $('#map')[0].addEventListener('DOMMouseScroll', mousewheel_event, true );
+
 }).on('mouseleave', '#infoWindow', function(e){
     map.setOptions({ scrollwheel: true });
-}).on('mousewheel', '#infoWindow', function(event, delta) {
-    $('ul.clusterImages')[0].scrollLeft -= (delta * 60);
-    event.preventDefault();
+
+    $('#map')[0].removeEventListener('mousewheel', mousewheel_event, true );
+    $('#map')[0].removeEventListener('DOMMouseScroll', mousewheel_event, true );
 });
+
+
 
 $(document).on('mouseenter', 'ul.clusterImages img', function(e){
     //just preload
@@ -163,8 +210,6 @@ function bindInfoWindow(map, marker) {
                 'lat': cluster.center_.lat(),
                 'lng': cluster.center_.lng()
             };
-
-            console.log(markers.length);
 
             //adding markers not from cluster
             for (i = 0; i < markersSet.length; i++) {
