@@ -96,7 +96,6 @@ function mousewheel_delta(event) {
         deltaX = -1 * orgEvent.wheelDeltaX / 120;
     }
 
-    // Add event and delta to the front of the arguments
     return [delta, deltaX, deltaY];
 }
 function mousewheel_event(event) {
