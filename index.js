@@ -26,32 +26,11 @@ if (viewportOptions) {
     };
 }
 
-var site_options = localStorage.getItem('site_options');
-function saveSiteOptions() {
-    site_options = {
-        'photos_per_request': parseInt($('[name="photos_per_request"]').val()),
-        'gallery_distance': parseInt($('[name="gallery_distance"]').val()),
-        'max_zoom': parseInt($('[name="max_zoom"]').val(), 10),
-        'cluster_size': parseInt($('[name="cluster_size"]').val(), 10),
-        'cluster_style': parseInt($('[name="cluster_style"]').val(), 10)
-    };
-    localStorage.setItem('site_options', JSON.stringify(site_options));
-}
-if (!site_options) {
-    saveSiteOptions();
-} else {
-    site_options = JSON.parse(site_options);
-    _.mapObject(site_options, function(val, key){
-        $('[name="'+key+'"]').val(val);
-    });
-}
-$(function(){
-    $('#inline-actions input, #inline-actions select').change(function(){
-        saveSiteOptions();
-    });
-});
+$('#inline-actions input, #inline-actions select').phoenix();
 
-
+var site_options = function(optName) {
+    return parseInt($('[name="'+optName+'"]').val(), 10);
+};
 
 ClusterIcon.prototype.onAdd = function() {
     this.div_ = document.createElement('DIV');
@@ -164,7 +143,7 @@ function bindInfoWindow(map, marker) {
                 var currentData = getMarkerEssentialData(marker);
                 for (i = 0; i < markersSet.length; i++) {
                     distance = getDistance(currentData, markersSet[i]);
-                    if (distance <= site_options['gallery_distance']) {
+                    if (distance <= site_options('gallery_distance')) {
                         markers.push(markersSet[i]);
                     }
                 }
@@ -201,7 +180,7 @@ function refreshMap() {
             'accuracy': 11, //1
             'sort': 'interestingness-desc',
             'extras': 'geo,url_t,url_m,description',
-            'per_page': site_options['photos_per_request'],
+            'per_page': site_options('photos_per_request'),
             'api_key': api_key,
             'method': 'flickr.photos.search'
         },
@@ -218,17 +197,26 @@ function onDataRecieved(data) {
     for (i = 0; i < data.photos.photo.length; i++) {
         photo = data.photos.photo[i];
 
-        var latLng = new google.maps.LatLng(photo.latitude, photo.longitude);
-        markerImage = new google.maps.MarkerImage(photo.url_t, null, null, null, new google.maps.Size(32, 32));
-        description = photo.description._content;
-        var marker = new google.maps.Marker({
-            position: latLng,
-            icon: markerImage,
-            title: description,
-            url_m: photo.url_m, //custom attr
-            url_t: photo.url_t, //custom attr
-            draggable: false
-        });
+        try {
+
+            var latLng = new google.maps.LatLng(photo.latitude, photo.longitude);
+            markerImage = new google.maps.MarkerImage(photo.url_t, null, null, null, new google.maps.Size(32, 32));
+            description = photo.description._content;
+            var marker = new google.maps.Marker({
+                position: latLng,
+                icon: markerImage,
+                title: description,
+                url_m: photo.url_m, //custom attr
+                url_t: photo.url_t, //custom attr
+                draggable: false
+            });
+
+        } catch (e) {
+            console.error('error:');
+            console.error(e);
+            continue;
+        }
+
         markers.push(marker);
 
         tmpMarkerData = getMarkerEssentialData(marker);
@@ -244,9 +232,9 @@ function onDataRecieved(data) {
         markersSet = markersSet.slice(markersSet.length - MAX_LEN_markersSet);
     }
 
-    var zoom = site_options['max_zoom'];
-    var size = site_options['cluster_size'];
-    var style = site_options['cluster_style'];
+    var zoom = site_options('max_zoom');
+    var size = site_options('cluster_size');
+    var style = site_options('cluster_style');
     zoom = zoom === -1 ? null : zoom;
     size = size === -1 ? null : size;
     style = style === -1 ? null: style;
@@ -263,6 +251,7 @@ function onDataRecieved(data) {
 
         bindInfoWindow(map, markerClusterer);
     } catch(e) {
+        console.error('error:');
         console.error(e);
     }
 }
