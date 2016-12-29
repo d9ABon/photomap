@@ -157,11 +157,27 @@ function bindInfoWindow(map, marker) {
         })(marker));
     } else if (marker instanceof MarkerClusterer) {
         google.maps.event.addListener(markerClusterer, 'clusterclick', function(cluster) {
+            var i, distance;
             var markers = cluster.markers_;
             var center = {
                 'lat': cluster.center_.lat(),
                 'lng': cluster.center_.lng()
             };
+
+            console.log(markers.length);
+
+            //adding markers not from cluster
+            for (i = 0; i < markersSet.length; i++) {
+                distance = getDistance(center, markersSet[i]);
+                if (distance <= site_options('gallery_distance')) {
+
+                    if (!_.findWhere(markers, {'url_m':markersSet[i].url_m, 'url_t': markersSet[i].url_t})) {
+                        markers.push(markersSet[i]);
+                    }
+
+                }
+            }
+
             showMultiple(markers, center);
         });
     }
