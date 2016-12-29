@@ -85,6 +85,16 @@ $(document).on('click', 'ul.clusterImages img', function(e){
     $('#infoWindowTitle').html(decodeURIComponent(previewImg.data('desc')));
     previewImg.addClass('current');
 });
+
+$(document).on('mouseenter', '#infoWindow', function(e){
+    map.setOptions({ scrollwheel: false });
+}).on('mouseleave', '#infoWindow', function(e){
+    map.setOptions({ scrollwheel: true });
+}).on('mousewheel', '#infoWindow', function(event, delta) {
+    $('ul.clusterImages')[0].scrollLeft -= (delta * 60);
+    event.preventDefault();
+});
+
 $(document).on('mouseenter', 'ul.clusterImages img', function(e){
     //just preload
     var previewImg = $(this);
@@ -96,6 +106,7 @@ $(document).on('click', '#site_opts', function(e){
     e.preventDefault();
     $('#inline-actions').toggle();
 });
+
 
 
 function getMarkerEssentialData(google_maps_Marker) {
@@ -113,6 +124,7 @@ function bindInfoWindow(map, marker) {
     function showSingle(marker) {
         var html;
         html = "<p class='infoWindowTitle'>" + marker.title + "</p>" + "<p id='infoWindowImgContainer'><img id='infoWindowImg' src='" + marker.url_m + "'/></p>";
+        html = '<div id="infoWindow">'+html+'</div>';
         infowindow.setContent(html);
         infowindow.open(map, marker);
     }
@@ -123,12 +135,13 @@ function bindInfoWindow(map, marker) {
         }
         html += '<p id="infoWindowTitle">'+current.title+'</p>';
         html += '<p id="infoWindowImgContainer"><img id="infoWindowImg" src="'+current.url_m+'" /></p>';
-        html += '<p><ul class="clusterImages">';
+        html += '<br /><ul class="clusterImages">';
 
         for (i = 0; i < markers.length; i++) {
             html += '<li><img src="'+markers[i].url_t+'" data-url_m="'+markers[i].url_m+'" data-desc="'+encodeURIComponent(markers[i].title)+'" /></li>';
         }
-        html += '</ul></p>';
+        html += '</ul>';
+        html = '<div id="infoWindow">'+html+'</div>';
 
         infowindow.setContent(html);
         infowindow.setPosition(new google.maps.LatLng(centerData.lat, centerData.lng));
@@ -230,7 +243,6 @@ function onDataRecieved(data) {
     if (markersSet.length > MAX_LEN_markersSet) {
         markersSet = markersSet.slice(markersSet.length - MAX_LEN_markersSet);
     }
-    console.log('len:', markersSet.length);
 
     var zoom = site_options['max_zoom'];
     var size = site_options['cluster_size'];
